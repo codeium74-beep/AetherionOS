@@ -6,11 +6,13 @@
 
 pub mod events;
 pub mod metrics;
+pub mod early_security;
 
 /// Initialize ACHA subsystem
 pub fn init() {
     log::info!("ACHA cognitive layer initializing...");
     metrics::init();
     events::init();
+    early_security::init(); // TPM check happens here
     log::info!("ACHA cognitive layer ready");
 }
