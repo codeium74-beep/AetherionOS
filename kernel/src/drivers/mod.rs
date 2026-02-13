@@ -1,6 +1,9 @@
 // Aetherion OS - Device Drivers
 // Phase 3+: Hardware abstraction with advanced features
 
+// HAL Layer drivers
+pub mod serial;   // UART serial port (Couche 1 HAL)
+
 // Basic drivers
 pub mod keyboard;
 pub mod vga;
@@ -13,6 +16,9 @@ pub mod sdr;      // Software Defined Radio (RTL-SDR, demodulation)
 
 /// Initialize all device drivers
 pub fn init_all() {
+    // HAL Layer
+    serial::init();
+    
     // Basic I/O
     keyboard::init();
     vga::init();

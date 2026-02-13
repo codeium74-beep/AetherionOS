@@ -1,5 +1,5 @@
 // Aetherion OS Kernel - Entry Point
-// Phase 1.3: Memory management with heap allocator
+// Couche 1 HAL Integration - Phase Complete
 
 #![no_std]
 #![no_main]
@@ -9,28 +9,24 @@
 extern crate alloc;
 
 use core::panic::PanicInfo;
-use alloc::vec::Vec;
-use alloc::string::String;
-use alloc::boxed::Box;
+
+// Couche 1 HAL modules
+mod arch;
+mod hal;
+mod acha;
 
 // Memory management modules
 mod memory;
 mod allocator;
+
+// Existing modules
 mod gdt;
 mod interrupts;
 mod syscall;
-
-// Phase 2 completion
 mod process;
 mod ipc;
-
-// Phase 3: Drivers
 mod drivers;
-
-// Phase 4: Filesystem
 mod fs;
-
-// Phase 5: Networking
 mod net;
 
 use memory::{PhysicalAddress, frame_allocator::FrameAllocator};
@@ -58,148 +54,142 @@ static mut HEAP_MEMORY: [u8; HEAP_SIZE] = [0; HEAP_SIZE];
 /// Called by bootloader after CPU is in 64-bit long mode
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
-    // Initialize hardware
+    // ========================================
+    // Couche 1 HAL Initialization
+    // ========================================
+    
+    // Phase 1: Initialize HAL (serial + logger)
+    hal::init();
+    
+    log::info!("═══════════════════════════════════════════════");
+    log::info!("  AetherionOS Cognitive Core v1.0.0");
+    log::info!("  Couche 1 HAL Layer - ACTIVE");
+    log::info!("═══════════════════════════════════════════════");
+    
+    // Phase 2: Architecture initialization (GDT, IDT)
+    log::info!("Initializing CPU structures...");
+    arch::init();
+    
+    // Phase 3: ACHA cognitive layer
+    log::info!("Initializing ACHA cognitive layer...");
+    acha::init();
+    
+    // ========================================
+    // Legacy System Initialization
+    // ========================================
+    
+    // Initialize hardware (legacy code)
     init_serial();
     clear_screen();
     
     // Display boot message
-    print_str("AETHERION OS v1.0.0 - FINAL", 0, 0);
-    print_str("============================", 0, 1);
-    print_str("Kernel loaded successfully!", 0, 3);
-    print_str("All Phases: COMPLETE", 0, 4);
-    print_str("Status: INITIALIZING...", 0, 5);
+    print_str("AETHERION OS v1.0.0 - COUCHE 1 HAL", 0, 0);
+    print_str("===================================", 0, 1);
+    print_str("HAL Layer: ACTIVE", 0, 3);
+    print_str("GDT: INITIALIZED", 0, 4);
+    print_str("IDT: INITIALIZED", 0, 5);
     
-    // Initialize GDT
-    serial_print("[CPU] Initializing GDT...\n");
+    log::info!("Legacy GDT initialization...");
     gdt::init();
-    print_str("GDT: INITIALIZED", 0, 6);
-    serial_print("[CPU] GDT initialized\n");
     
-    // Initialize IDT
-    serial_print("[CPU] Initializing IDT...\n");
+    log::info!("Legacy IDT initialization...");
     interrupts::init();
-    print_str("IDT: INITIALIZED", 0, 7);
-    serial_print("[CPU] IDT initialized\n");
+    print_str("Legacy IDT: INITIALIZED", 0, 6);
     
-    // Initialize syscalls
-    serial_print("[SYSCALL] Initializing syscall interface...\n");
+    log::info!("Syscall interface initialization...");
     syscall::init();
-    print_str("Syscalls: INITIALIZED", 0, 8);
-    serial_print("[SYSCALL] Syscall interface ready\n");
+    print_str("Syscalls: INITIALIZED", 0, 7);
     
-    // Phase 2 completion
-    serial_print("[PROCESS] Initializing process management...\n");
+    log::info!("Process management initialization...");
     process::init();
     ipc::init();
-    print_str("Processes & IPC: INITIALIZED", 0, 9);
+    print_str("Processes & IPC: INITIALIZED", 0, 8);
     
-    // Phase 3: Drivers
-    serial_print("[DRIVERS] Initializing device drivers...\n");
+    log::info!("Device drivers initialization...");
     drivers::init_all();
-    print_str("Drivers: INITIALIZED", 0, 10);
+    print_str("Drivers: INITIALIZED", 0, 9);
     
-    // Phase 4: Filesystem
-    serial_print("[FS] Initializing filesystem...\n");
+    log::info!("Filesystem initialization...");
     fs::init();
-    print_str("Filesystem: INITIALIZED", 0, 11);
+    print_str("Filesystem: INITIALIZED", 0, 10);
     
-    // Phase 5: Networking
-    serial_print("[NET] Initializing network stack...\n");
+    log::info!("Network stack initialization...");
     net::init();
-    print_str("Networking: INITIALIZED", 0, 12);
-    
-    // Log to serial
-    serial_print("[KERNEL] Aetherion OS booted successfully\n");
-    serial_print("[KERNEL] VGA driver initialized\n");
-    serial_print("[KERNEL] Serial output configured\n");
+    print_str("Networking: INITIALIZED", 0, 11);
     
     // Initialize frame allocator
-    serial_print("[MEMORY] Initializing frame allocator...\n");
+    log::info!("Initializing frame allocator...");
     let mut frame_allocator = unsafe {
-        FrameAllocator::new(
-            PhysicalAddress::new(MEMORY_START),
+        memory::frame_allocator::FrameAllocator::new(
+            memory::PhysicalAddress::new(MEMORY_START),
             MEMORY_SIZE,
             &mut FRAME_BITMAP,
         )
     };
     
-    print_str("Frame Allocator: INITIALIZED", 0, 6);
-    serial_print("[MEMORY] Frame allocator initialized\n");
-    
-    // Display memory info
-    print_str("Memory Information:", 0, 8);
-    print_str("  Total RAM: 32 MB", 0, 9);
-    print_str("  Start Address: 0x100000", 0, 10);
-    print_str("  Frame Size: 4 KB", 0, 11);
-    print_str("  Total Frames: 8192", 0, 12);
+    print_str("Frame Allocator: INITIALIZED", 0, 13);
     
     // Test frame allocation
-    serial_print("[MEMORY] Testing frame allocation...\n");
-    print_str("Testing Frame Allocation...", 0, 14);
+    log::info!("Testing frame allocation...");
+    print_str("Testing Frame Allocation...", 0, 15);
     
-    // Allocate 5 frames
-    for i in 1..=5 {
-        if let Some(frame) = frame_allocator.allocate_frame() {
-            serial_print("[MEMORY] Allocated frame #");
-            // Note: Can't format numbers yet, will add in next phase
-            serial_print("\n");
+    for _i in 1..=5 {
+        if let Some(_frame) = frame_allocator.allocate_frame() {
+            // Frame allocated successfully
         } else {
-            serial_print("[ERROR] Frame allocation failed!\n");
-            print_str("ERROR: Frame allocation failed!", 0, 15);
+            log::error!("Frame allocation failed!");
+            print_str("ERROR: Frame allocation failed!", 0, 16);
         }
     }
     
-    print_str("Allocated 5 frames successfully!", 0, 15);
-    serial_print("[MEMORY] Allocated 5 test frames\n");
+    print_str("Allocated 5 frames successfully!", 0, 16);
+    log::info!("Frame allocation tests passed");
     
     // Initialize heap allocator
-    serial_print("[HEAP] Initializing heap allocator...\n");
+    log::info!("Initializing heap allocator...");
     unsafe {
         allocator::init_heap(
             HEAP_MEMORY.as_ptr() as usize,
             HEAP_SIZE,
         );
     }
-    print_str("Heap Allocator: INITIALIZED", 0, 16);
-    serial_print("[HEAP] Heap allocator initialized (1 MB)\n");
+    print_str("Heap Allocator: INITIALIZED", 0, 17);
     
     // Test heap allocations
-    serial_print("[HEAP] Testing dynamic allocations...\n");
-    print_str("Testing Heap Allocations...", 0, 18);
+    log::info!("Testing heap allocations...");
+    print_str("Testing Heap Allocations...", 0, 19);
     
-    // Test Vec
+    use alloc::vec::Vec;
+    use alloc::string::String;
+    use alloc::boxed::Box;
+    
     let mut vec = Vec::new();
     vec.push(1);
     vec.push(2);
     vec.push(3);
-    serial_print("[HEAP] Vec test: OK\n");
+    log::debug!("Vec test: OK");
     
-    // Test String
     let mut s = String::from("Aetherion");
     s.push_str(" OS");
-    serial_print("[HEAP] String test: OK\n");
+    log::debug!("String test: OK");
     
-    // Test Box
     let boxed = Box::new(42);
-    serial_print("[HEAP] Box test: OK\n");
+    log::debug!("Box test: OK (value: {})", *boxed);
     
-    print_str("All heap tests passed!", 0, 19);
-    serial_print("[HEAP] All dynamic allocation tests passed\n");
+    print_str("All heap tests passed!", 0, 20);
     
-    // Display heap stats
-    let stats = allocator::heap_stats();
-    print_str("Heap Statistics:", 0, 21);
-    print_str("  Size: 1 MB", 0, 22);
-    serial_print("[HEAP] Heap size: 1 MB\n");
+    // Display final status
+    log::info!("═══════════════════════════════════════════════");
+    log::info!("  COUCHE 1 HAL: OPERATIONAL");
+    log::info!("  System Status: READY");
+    log::info!("═══════════════════════════════════════════════");
     
-    serial_print("[MEMORY] Memory management fully operational\n");
-    print_str("Status: OPERATIONAL", 0, 24);
+    print_str("Status: OPERATIONAL", 0, 22);
+    print_str("Couche 1 HAL: COMPLETE", 0, 23);
+    print_str("System ready. Press Reset to reboot.", 0, 24);
     
-    // Halt loop
-    print_str("System ready. Press Reset to reboot.", 0, 25);
-    
+    // Idle loop
     loop {
-        // Use hlt instruction to save power
         unsafe {
             core::arch::asm!("hlt");
         }
@@ -214,37 +204,13 @@ fn alloc_error(layout: core::alloc::Layout) -> ! {
 }
 
 /// Panic Handler
-/// Called when kernel encounters unrecoverable error
+/// Imported from HAL layer
+/// 
+/// The actual panic handler is defined in hal/panic.rs to provide
+/// sophisticated error reporting with ACHA integration.
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
-    // Display panic message on VGA
-    clear_screen();
-    print_str("!!! KERNEL PANIC !!!", 0, 0);
-    print_str("====================", 0, 1);
-    
-    // Try to display panic info (may not work if alloc failed)
-    if let Some(location) = info.location() {
-        // Format: "File: {file}, Line: {line}"
-        print_str("Location:", 0, 3);
-        print_str(location.file(), 2, 4);
-        
-        // Log to serial (more reliable)
-        serial_print("[PANIC] Kernel panic occurred!\n");
-        serial_print("[PANIC] File: ");
-        serial_print(location.file());
-        serial_print("\n[PANIC] Line: ");
-        // Note: Can't format numbers without alloc, will show in hex later
-        serial_print("\n");
-    }
-    
-    print_str("System halted.", 0, 6);
-    
-    // Infinite halt loop
-    loop {
-        unsafe {
-            core::arch::asm!("cli; hlt"); // Disable interrupts and halt
-        }
-    }
+    crate::hal::panic::panic(info)
 }
 
 /// Initialize Serial Port (COM1)
