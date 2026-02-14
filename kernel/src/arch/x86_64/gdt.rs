@@ -29,7 +29,7 @@ lazy_static! {
             static mut STACK: [u8; STACK_SIZE] = [0; STACK_SIZE];
             
             let stack_start = VirtAddr::from_ptr(unsafe { &STACK });
-            let stack_end = stack_start + STACK_SIZE;
+            let stack_end = stack_start + STACK_SIZE as u64;
             stack_end // Stack grows downward, so we return the end address
         };
         
@@ -44,13 +44,13 @@ lazy_static! {
         let mut gdt = GlobalDescriptorTable::new();
         
         // Add kernel code segment (ring 0, executable)
-        let code_selector = gdt.add_entry(Descriptor::kernel_code_segment());
+        let code_selector = gdt.append(Descriptor::kernel_code_segment());
         
         // Add kernel data segment (ring 0, writable)
-        let data_selector = gdt.add_entry(Descriptor::kernel_data_segment());
+        let data_selector = gdt.append(Descriptor::kernel_data_segment());
         
         // Add TSS segment for interrupt handling
-        let tss_selector = gdt.add_entry(Descriptor::tss_segment(&TSS));
+        let tss_selector = gdt.append(Descriptor::tss_segment(&TSS));
         
         (gdt, Selectors {
             code_selector,

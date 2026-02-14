@@ -16,10 +16,8 @@ pub fn panic(info: &PanicInfo) -> ! {
     crate::serial_println!("║          KERNEL PANIC DETECTED                 ║");
     crate::serial_println!("╚════════════════════════════════════════════════╝\n");
 
-    // Message
-    if let Some(message) = info.message() {
-        crate::serial_println!("Message: {}", message);
-    }
+    // Message - use as_str() or format_args!()
+    crate::serial_println!("Message: {}", info.message());
 
     // Location
     if let Some(location) = info.location() {

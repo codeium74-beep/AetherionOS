@@ -2,6 +2,7 @@
 // FM, AM, SSB demodulation for SDR
 
 use super::IqSample;
+use alloc::vec;
 use alloc::vec::Vec;
 
 /// FM Demodulator

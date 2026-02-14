@@ -54,7 +54,10 @@ impl BumpAllocator {
     pub unsafe fn alloc(&mut self, layout: Layout) -> *mut u8 {
         // Align the next pointer
         let alloc_start = align_up(self.next, layout.align());
-        let alloc_end = alloc_start.checked_add(layout.size())?;
+        let alloc_end = match alloc_start.checked_add(layout.size()) {
+            Some(end) => end,
+            None => return ptr::null_mut(),
+        };
 
         if alloc_end > self.heap_end {
             // Out of memory

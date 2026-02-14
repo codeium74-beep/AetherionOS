@@ -33,7 +33,7 @@ impl GdtEntry {
             base_low: (base & 0xFFFF) as u16,
             base_middle: ((base >> 16) & 0xFF) as u8,
             access,
-            granularity: (((limit >> 16) & 0x0F) | (flags & 0xF0)) as u8,
+            granularity: (((limit >> 16) & 0x0F) as u8) | (flags & 0xF0),
             base_high: ((base >> 24) & 0xFF) as u8,
         }
     }

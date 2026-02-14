@@ -108,7 +108,7 @@ impl RtlSdr {
         // For now, assume R820T
         let tuner = TunerType::R820T;
         
-        serial_print!("[RTL-SDR] Detected tuner: {:?}\n", tuner);
+        crate::serial_print!("[RTL-SDR] Detected tuner: {:?}\n", tuner);
         
         // Initialize R820T tuner
         self.init_r820t()?;
@@ -151,7 +151,7 @@ impl SdrDevice for RtlSdr {
             return Err("No USB device attached");
         }
         
-        serial_print!("[RTL-SDR] Initializing RTL-SDR device...\n");
+        crate::serial_print!("[RTL-SDR] Initializing RTL-SDR device...\n");
         
         // Initialize demodulator
         self.init_demod()?;
@@ -165,9 +165,9 @@ impl SdrDevice for RtlSdr {
         // Set default frequency
         self.tune(self.frequency)?;
         
-        serial_print!("[RTL-SDR] Device initialized successfully\n");
-        serial_print!("[RTL-SDR] Frequency: {} Hz\n", self.frequency);
-        serial_print!("[RTL-SDR] Sample rate: {} Hz\n", self.sample_rate);
+        crate::serial_print!("[RTL-SDR] Device initialized successfully\n");
+        crate::serial_print!("[RTL-SDR] Frequency: {} Hz\n", self.frequency);
+        crate::serial_print!("[RTL-SDR] Sample rate: {} Hz\n", self.sample_rate);
         
         Ok(())
     }
@@ -185,7 +185,7 @@ impl SdrDevice for RtlSdr {
         
         self.frequency = freq_hz;
         
-        serial_print!("[RTL-SDR] Tuned to {} Hz ({:.2} MHz)\n", 
+        crate::serial_print!("[RTL-SDR] Tuned to {} Hz ({:.2} MHz)\n", 
                      freq_hz, freq_hz as f32 / 1_000_000.0);
         
         Ok(())
@@ -199,13 +199,13 @@ impl SdrDevice for RtlSdr {
         
         // Calculate resampling ratio
         let xtal_freq = 28_800_000u32;
-        let ratio = xtal_freq / rate;
+        let _ratio = xtal_freq / rate;
         
         // Write to demodulator registers (simplified)
         
         self.sample_rate = rate;
         
-        serial_print!("[RTL-SDR] Sample rate set to {} Hz\n", rate);
+        crate::serial_print!("[RTL-SDR] Sample rate set to {} Hz\n", rate);
         
         Ok(())
     }
@@ -238,9 +238,4 @@ impl Default for RtlSdr {
     fn default() -> Self {
         Self::new()
     }
-}
-
-#[macro_export]
-macro_rules! serial_print {
-    ($($arg:tt)*) => {{}};
 }

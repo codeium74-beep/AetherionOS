@@ -4,6 +4,7 @@ pub mod rtlsdr;
 pub mod demodulator;
 
 use alloc::vec::Vec;
+use crate::serial_print;
 
 /// SDR Device trait
 pub trait SdrDevice {

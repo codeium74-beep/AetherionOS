@@ -5,7 +5,7 @@ pub mod xhci;
 pub mod hid;
 pub mod descriptor;
 
-use crate::drivers::pci::{PciDevice, PciClass};
+use crate::drivers::pci::PciDevice;
 
 /// USB Device Descriptor
 #[derive(Debug, Clone, Copy)]
@@ -39,20 +39,20 @@ pub trait UsbController {
 
 /// Initialize USB subsystem
 pub fn init() -> Result<(), &'static str> {
-    serial_print!("[USB] Initializing USB subsystem...\n");
+    crate::serial_print!("[USB] Initializing USB subsystem...\n");
     
     // Scan PCI bus for USB controllers
     let controllers = scan_usb_controllers()?;
     
     if controllers.is_empty() {
-        serial_print!("[USB] No USB controllers found\n");
+        crate::serial_print!("[USB] No USB controllers found\n");
         return Err("No USB controllers found");
     }
     
-    serial_print!("[USB] Found {} USB controller(s)\n", controllers.len());
+    crate::serial_print!("[USB] Found {} USB controller(s)\n", controllers.len());
     
     for controller in controllers {
-        serial_print!("[USB] Controller: {:04x}:{:04x} at {:02x}:{:02x}.{}\n",
+        crate::serial_print!("[USB] Controller: {:04x}:{:04x} at {:02x}:{:02x}.{}\n",
                      controller.vendor_id, controller.device_id,
                      controller.bus, controller.device, controller.function);
     }
@@ -70,7 +70,7 @@ fn scan_usb_controllers() -> Result<alloc::vec::Vec<PciDevice>, &'static str> {
     // Subclass 0x03 = USB Controller
     // We specifically look for XHCI (Programming Interface 0x30)
     
-    serial_print!("[USB] Scanning PCI bus for USB controllers...\n");
+    crate::serial_print!("[USB] Scanning PCI bus for USB controllers...\n");
     
     // For now, simulate finding one XHCI controller
     // In real implementation, we'd scan the entire PCI configuration space
@@ -78,15 +78,7 @@ fn scan_usb_controllers() -> Result<alloc::vec::Vec<PciDevice>, &'static str> {
     // TODO: Implement real PCI scan
     // This is a placeholder that shows the structure
     
-    serial_print!("[USB] PCI scan complete\n");
+    crate::serial_print!("[USB] PCI scan complete\n");
     
     Ok(controllers)
-}
-
-// Helper macro for serial printing (to be defined in main.rs or serial module)
-#[macro_export]
-macro_rules! serial_print {
-    ($($arg:tt)*) => {{
-        // Serial output implementation
-    }};
 }

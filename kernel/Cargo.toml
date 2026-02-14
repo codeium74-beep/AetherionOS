@@ -20,6 +20,9 @@ bitflags = "2.4.2"
 log = "0.4.20"
 volatile = "0.5.2"
 
+# Math library for no_std
+libm = "0.2"
+
 [profile.dev]
 panic = "abort"
 

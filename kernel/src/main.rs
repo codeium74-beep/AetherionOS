@@ -3,7 +3,7 @@
 
 #![no_std]
 #![no_main]
-#![feature(asm_const)]
+#![feature(abi_x86_interrupt)]
 #![feature(alloc_error_handler)]
 
 extern crate alloc;
@@ -28,8 +28,6 @@ mod ipc;
 mod drivers;
 mod fs;
 mod net;
-
-use memory::{PhysicalAddress, frame_allocator::FrameAllocator};
 
 // VGA Text Mode Constants
 const VGA_BUFFER: *mut u8 = 0xb8000 as *mut u8;
